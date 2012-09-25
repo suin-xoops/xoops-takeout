@@ -25,6 +25,7 @@ help(){
 	echo ""
 	echo "Usage:"
 	echo "  \$ $SCRIPT_NAME <path/to/mainfile.php> <export-directory>"
+	echo "  \$ $SCRIPT_NAME <path/to/mainfile.php> <export-directory> <rotate-limit>"
 }
 
 #
@@ -79,11 +80,25 @@ compress_files() {
 }
 
 #
+# Do backup rotation
+#
+do_rotate() {
+	name=$1
+	rotate_limit=$2
+
+	while [ $(ls $name.*.tgz 2> /dev/null | wc -l) -gt $rotate_limit ]
+	do
+		rm -f $(ls $name.*.tgz | head -1)
+	done
+}
+
+
+#
 # Main function
 #
 main() {
 
-	if [ $# -ne 2 ]
+	if [ $# -lt 2 ]
 	then
 		help
 		return 1
@@ -92,6 +107,19 @@ main() {
 	mainfile="$1"
 	backup_directory="$2"
 	date=$(date "+%y%m%d.%H%M")
+	do_rotate=0
+	
+	if [ $# -gt 2 ]
+	then
+		if [ $3 -gt 0 ]
+		then
+			do_rotate=1
+			rotate_limit=$3
+		else
+			echo "Rotate limit must be more than or equals to 1"
+			return 1
+		fi
+	fi
 
 	if [ ! -f "$mainfile" ]
 	then
@@ -121,13 +149,17 @@ main() {
 	
 	mysql_backup_filename="/tmp/$XOOPS_DB_NAME.sql"
 
-	# Parallel processing
 	make_mysql_dump "$XOOPS_DB_HOST" "$XOOPS_DB_USER" "$XOOPS_DB_PASS" "$XOOPS_DB_NAME" "$mysql_backup_filename" 
 	tar czvf "$backup_directory/$XOOPS_DB_NAME.$date.tgz" \
 		-C $(dirname "$mysql_backup_filename") $(basename "$mysql_backup_filename") \
 		-C $(dirname "$XOOPS_ROOT_PATH")       $(basename "$XOOPS_ROOT_PATH") \
 		-C $(dirname "$XOOPS_TRUST_PATH")      $(basename "$XOOPS_TRUST_PATH")
 	rm -f "$mysql_backup_filename"
+
+	if [ $do_rotate -eq 1 ]
+	then
+		do_rotate $XOOPS_DB_NAME $rotate_limit
+	fi
 }
 
 main $@
