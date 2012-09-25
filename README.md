@@ -25,7 +25,7 @@ $ ./xoops-takeout.sh /var/www/html/mainfile.php /var/backup
 Daily back up (back up XOOPS 4 o'clock every day)
 
 ```
-0 4 * * * /home/suin/bin/xoops-takeout.sh  /var/www/html/mainfile.php  /home/suin/backup
+0 4 * * * /home/suin/bin/xoops-takeout.sh  /var/www/html/mainfile.php  /home/suin/backup > /dev/null 2&>1
 ```
 
 ## License
