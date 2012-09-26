@@ -83,12 +83,13 @@ compress_files() {
 # Do backup rotation
 #
 do_rotate() {
-	name=$1
-	rotate_limit=$2
+	backup_directory=$1
+	name=$2
+	rotate_limit=$3
 
-	while [ $(ls $name.*.tgz 2> /dev/null | wc -l) -gt $rotate_limit ]
+	while [ $(ls $backup_directory/$name.*.tgz 2> /dev/null | wc -l) -gt $rotate_limit ]
 	do
-		rm -f $(ls $name.*.tgz | head -1)
+		rm -f $(ls $backup_directory/$name.*.tgz | head -1)
 	done
 }
 
@@ -158,7 +159,7 @@ main() {
 
 	if [ $do_rotate -eq 1 ]
 	then
-		do_rotate $XOOPS_DB_NAME $rotate_limit
+		do_rotate $backup_directory $XOOPS_DB_NAME $rotate_limit
 	fi
 }
 
