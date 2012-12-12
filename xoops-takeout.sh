@@ -13,6 +13,12 @@
 #    https://github.com/suin/xoops-takeout
 #
 
+# Transfer Target
+TRANS_TARGET_SV_NAME="192.168.0.1"
+TRANS_TARGET_PORT="22"
+TRANS_TARGET_USER="user_name"
+
+
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 SCRIPT_NAME=$0
@@ -151,7 +157,7 @@ main() {
 	mysql_backup_filename="/tmp/$XOOPS_DB_NAME.sql"
 
 	make_mysql_dump "$XOOPS_DB_HOST" "$XOOPS_DB_USER" "$XOOPS_DB_PASS" "$XOOPS_DB_NAME" "$mysql_backup_filename" 
-	tar czvf "$backup_directory/$XOOPS_DB_NAME.$date.tgz" \
+	tar czf "$backup_directory/$XOOPS_DB_NAME.$date.tgz" \
 		-C $(dirname "$mysql_backup_filename") $(basename "$mysql_backup_filename") \
 		-C $(dirname "$XOOPS_ROOT_PATH")       $(basename "$XOOPS_ROOT_PATH") \
 		-C $(dirname "$XOOPS_TRUST_PATH")      $(basename "$XOOPS_TRUST_PATH")
@@ -161,6 +167,12 @@ main() {
 	then
 		do_rotate $backup_directory $XOOPS_DB_NAME $rotate_limit
 	fi
+
+	transfer "$backup_directory/$XOOPS_DB_NAME.$date.tgz"
+}
+
+transfer() {
+	scp -P $TRANS_TARGET_PORT $1 $TRANS_TARGET_USER@$TRANS_TARGET_SV_NAME:/home/$TRANS_TARGET_USER/
 }
 
 main $@
